@@ -2,6 +2,7 @@ import { configDotenv } from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import jobRouter from "./router/jobRouter.js";
+import cors from "cors";
 const app = express();
 configDotenv({
   override: true,
@@ -9,18 +10,23 @@ configDotenv({
 });
 
 // middlewares
+app.use(
+  cors({
+    origin: `${import.meta.env.CLIENT_URL}`,
+  })
+);
 app.use(express.json());
 app.use("/api/jobs", jobRouter);
 
 // database connection
 const connectDB = async () => {
-  await mongoose.connect(process.env.MONGODB_URI, {
+  await mongoose.connect(`${import.meta.env.MONGODB_URI}`, {
     serverSelectionTimeoutMS: 5000,
   });
   console.log("Database is connected successfully...");
 };
 
-app.listen(process.env.PORT, () => {
+app.listen(`${import.meta.env.PORT}`, () => {
   connectDB();
   console.log(`Server is running on port: ${process.env.PORT}`);
 });
