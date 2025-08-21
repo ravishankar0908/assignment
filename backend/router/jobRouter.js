@@ -6,7 +6,6 @@ const router = express.Router();
 // to get all jobs including server side search
 router.get("/", getAllJobs);
 
-
 // to insert jobs
 router.post("/add", addJobs);
 

@@ -9,19 +9,18 @@ configDotenv({
 });
 
 // middlewares
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/jobs", jobRouter);
 
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
 // database connection
 const connectDB = async () => {
-  await mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 30000, // Increased timeout
-    socketTimeoutMS: 45000,
-    bufferMaxEntries: 0, // Disable mongoose buffering
-    maxPoolSize: 10,
-    retryWrites: true,
-  });
+  await mongoose.connect(process.env.MONGODB_URI);
   console.log("Database is connected successfully...");
 };
 
