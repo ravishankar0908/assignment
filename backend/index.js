@@ -19,7 +19,13 @@ app.use("/api/jobs", jobRouter);
 
 // database connection
 const connectDB = async () => {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 30000, // Increased timeout
+    socketTimeoutMS: 45000,
+    bufferMaxEntries: 0, // Disable mongoose buffering
+    maxPoolSize: 10,
+    retryWrites: true,
+  });
   console.log("Database is connected successfully...");
 };
 
