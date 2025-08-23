@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { toast, ToastContainer } from "react-toastify";
 import {
   Modal,
   Input,
@@ -62,12 +63,10 @@ function App() {
   };
 
   const handleLocation = (value) => {
-    console.log(value);
     setLocation(value);
   };
 
   const handleJob = (value) => {
-    console.log(value);
     setJob(value);
   };
 
@@ -79,7 +78,7 @@ function App() {
   };
 
   const fetchData = async () => {
-    await getAllJobs(search)
+    await getAllJobs(search, location, job)
       .then((res) => {
         setJoblist(res.jobs);
       })
@@ -90,7 +89,7 @@ function App() {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, [search, location, job]);
 
   const onSubmit = async (values) => {
     const data = {
@@ -106,15 +105,21 @@ function App() {
     await insertJobs(data)
       .then((res) => {
         console.log(res.message);
+        toast(res.message);
         reset();
+        handleCancel();
+        fetchData();
       })
       .catch((error) => {
         console.log(error.message);
       });
   };
 
+  const companyLogos = ["/tesla.png", "/amazon.png"];
+
   return (
     <>
+      <ToastContainer />
       <nav className="flex justify-center mt-5">
         <div className="flex justify-center items-center px-7 py-5 rounded-full bg-white shadow-[0_4px_20px_rgba(0,0,0,0.1)] gap-10">
           <div className="logo">
@@ -200,37 +205,59 @@ function App() {
         </div>
       </div>
 
-      <div className="mt-10 px-20 grid grid-cols-4  gap-5">
+      <div className="mt-10 px-3 md:px-20 grid md:grid-cols-4 gap-5">
         {joblist.map((job) => (
-          <Card key={job._id} style={{ width: "100%" }} className="shadow-lg">
-            <div className="flex flex-col gap-3">
-              <div className="flex">
-                <div className="w-20 h-20 shadow-lg bg-gradient-to-b from-[#fdfdfc] to-[#f2f2f2] rounded-2xl">
-                  {/* logo */}
+          <Card
+            key={job._id}
+            style={{ width: "100%" }}
+            className="shadow-lg min-h-80  "
+          >
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3 ">
+                <div className="flex justify-between">
+                  <div className="w-20 h-20 shadow-lg bg-gradient-to-b from-[#fdfdfc] to-[#f2f2f2] rounded-2xl">
+                    {/* logo */}
+                    <img
+                      src={companyLogos[1]}
+                      className="rounded-full p-2"
+                      alt=""
+                      srcset=""
+                    />
+                  </div>
+                  <div>
+                    <p className="bg-[#b0d9ff] py-2 px-3 text-semibold rounded-xl font-sans">
+                      24h Ago
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xl font-bold">{job.title}</p>
+                </div>
+                <div className="flex justify-between ">
+                  <p className="flex items-center gap-2">
+                    <UserPlus size={(18, 18)} /> 1-3 yr Exp
+                  </p>
+
+                  <p className="flex items-center gap-2">
+                    <Building2 size={(18, 18)} /> Onsite
+                  </p>
+
+                  <p className="flex items-center gap-2">
+                    <Layers size={(15, 18)} /> 12LPA
+                  </p>
+                </div>
+                <div className="pl-4 mt-3">
+                  <ul className="list-disc">
+                    {job.description
+                      ?.split("\n")
+                      .filter((line) => line.trim() !== "")
+                      .map((line, idx) => (
+                        <li key={idx}>{line}</li>
+                      ))}
+                  </ul>
                 </div>
               </div>
-              <div>
-                <p className="text-xl font-bold">{job.title}</p>
-              </div>
-              <div className="flex justify-between ">
-                <p className="flex items-center gap-2">
-                  <UserPlus size={(18, 18)} /> 1-3 yr Exp
-                </p>
-
-                <p className="flex items-center gap-2">
-                  <Building2 size={(18, 18)} /> Onsite
-                </p>
-
-                <p className="flex items-center gap-2">
-                  <Layers size={(15, 18)} /> 12LPA
-                </p>
-              </div>
-              <div>
-                <ul>
-                  <li>{job.description}</li>
-                </ul>
-              </div>
-              <div>
+              <div className="">
                 <button className="!bg-[#00aaff] px-15 py-3 rounded-lg flex items-center gap-2 text-lg text-white hover:cursor-pointer w-full justify-center">
                   Apply Now
                 </button>
@@ -312,14 +339,15 @@ function App() {
                 render={({ field }) => (
                   <Select
                     {...field}
-                    variant="outlined"
                     placeholder="preferred location"
+                    variant="outlined"
+                    value={field.value || undefined}
                     className={`!w-full selector [&_.ant-select-selector]:hover:!border-black 
-    [&_.ant-select-selector]:focus:!border-black ${
-      errors.location
-        ? "[&_.ant-select-selector]:focus:!border-red-600 [&_.ant-select-selector]:hover:!border-red-600 [&_.ant-select-selector]:!border-red-600"
-        : ""
-    }`}
+                      [&_.ant-select-selector]:focus:!border-black ${
+                        errors.location
+                          ? "[&_.ant-select-selector]:focus:!border-red-600 [&_.ant-select-selector]:hover:!border-red-600 [&_.ant-select-selector]:!border-red-600"
+                          : ""
+                      }`}
                     style={{
                       width: 120,
                       paddingTop: "8px",
@@ -327,10 +355,10 @@ function App() {
                       height: "65px",
                     }}
                     options={[
-                      { value: "Chennai" },
-                      { value: "Coimbatore" },
-                      { value: "Madurai" },
-                      { value: "Banglore" },
+                      { value: "Chennai", label: "Chennai" },
+                      { value: "Coimbatore", label: "Coimbatore" },
+                      { value: "Madurai", label: "Madurai" },
+                      { value: "Bangalore", label: "Bangalore" },
                     ]}
                   />
                 )}
@@ -350,13 +378,14 @@ function App() {
                   <Select
                     {...field}
                     placeholder="Job Type"
+                    value={field.value || undefined}
                     variant="outlined"
                     className={`!w-full selector [&_.ant-select-selector]:hover:!border-black 
-    [&_.ant-select-selector]:focus:!border-black ${
-      errors.jobType
-        ? "[&_.ant-select-selector]:focus:!border-red-600 [&_.ant-select-selector]:hover:!border-red-600 [&_.ant-select-selector]:!border-red-600"
-        : ""
-    }`}
+                      [&_.ant-select-selector]:focus:!border-black ${
+                        errors.jobType
+                          ? "[&_.ant-select-selector]:focus:!border-red-600 [&_.ant-select-selector]:hover:!border-red-600 [&_.ant-select-selector]:!border-red-600"
+                          : ""
+                      }`}
                     style={{
                       width: 120,
                       paddingTop: "8px",
@@ -486,7 +515,7 @@ function App() {
         }`}
                     rows={6}
                     placeholder="Please share the job description to let the candidate to know more about the job role"
-                    maxLength={100}
+                    maxLength={200}
                   />
                 )}
               />
