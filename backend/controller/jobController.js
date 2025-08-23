@@ -1,86 +1,95 @@
-    import jobModel from "../model/jobModel.js";
-    import { statusCodes } from "../utils/codesUtils.js";
-    import { messages } from "../utils/messagesUtils.js";
+import jobModel from "../model/jobModel.js";
+import { statusCodes } from "../utils/codesUtils.js";
+import { messages } from "../utils/messagesUtils.js";
 
-    // to get all jobs including server side search
-    export const getAllJobs = async (req, res) => {
-    try {
-        const { search } = req.query;
+// to get all jobs including server side search
+export const getAllJobs = async (req, res) => {
+  try {
+    const { search, location, jobType } = req.query;
 
-        const query = search
-        ? {
-            $or: [
-                { title: { $regex: search, $options: "i" } },
-                { location: { $regex: search, $options: "i" } },
-                { jobType: { $regex: search, $options: "i" } },
-            ],
-            }
-        : {};
+    const query = {};
+    const condition = [];
 
-        const jobs = await jobModel.find(query);
+    if (search) {
+      condition.push({ title: { $regex: search, $options: "i" } });
+    }
 
-        if (jobs.length === 0) {
-        return res.status(statusCodes.notFound).json({
-            jobs,
-            message: messages.notFound,
-        });
-        }
+    if (location) {
+      condition.push({ location: { $regex: location, $options: "i" } });
+    }
 
-        return res.status(statusCodes.success).json({
+    if (jobType) {
+      condition.push({ jobType: { $regex: jobType, $options: "i" } });
+    }
+
+    if (condition.length > 0) {
+      query.$and = condition;
+    }
+
+    const jobs = await jobModel.find(query);
+
+    if (jobs.length === 0) {
+      return res.status(statusCodes.notFound).json({
         jobs,
-        });
-    } catch (error) {
-        return res.status(statusCodes.server).json({
-        message: error.message,
-        });
+        message: messages.notFound,
+      });
     }
-    };
 
-    // to insert jobs
-    export const addJobs = async (req, res) => {
-    try {
-        const {
-        title,
-        companyName,
-        location,
-        jobType,
-        salaryRange,
-        description,
-        applicationDeadline,
-        } = req.body;
+    return res.status(statusCodes.success).json({
+      jobs,
+    });
+  } catch (error) {
+    return res.status(statusCodes.server).json({
+      message: error.message,
+    });
+  }
+};
 
-        console.log(
-        title,
-        companyName,
-        location,
-        jobType,
-        salaryRange,
-        description,
-        applicationDeadline
-        );
+// to insert jobs
+export const addJobs = async (req, res) => {
+  try {
+    const {
+      title,
+      companyName,
+      location,
+      jobType,
+      salaryRange,
+      description,
+      applicationDeadline,
+    } = req.body;
 
-        const isInsertJob = await jobModel.create({
-        title,
-        companyName,
-        location,
-        jobType,
-        salaryRange,
-        description,
-        applicationDeadline,
-        });
+    console.log(
+      title,
+      companyName,
+      location,
+      jobType,
+      salaryRange,
+      description,
+      applicationDeadline
+    );
 
-        if (!isInsertJob) {
-        return res.status(statusCodes.created).json({
-            message: messages.notCreated,
-        });
-        }
+    const isInsertJob = await jobModel.create({
+      title,
+      companyName,
+      location,
+      jobType,
+      salaryRange,
+      description,
+      applicationDeadline,
+    });
 
-        return res.status(statusCodes.notFound).json({
-        message: messages.created,
-        });
-    } catch (error) {
-        return res.status(statusCodes.server).json({
-        message: error.message,
-        });
+    if (!isInsertJob) {
+      return res.status(statusCodes.notFound).json({
+        message: messages.notCreated,
+      });
     }
-    };
+
+    return res.status(statusCodes.created).json({
+      message: messages.created,
+    });
+  } catch (error) {
+    return res.status(statusCodes.server).json({
+      message: error.message,
+    });
+  }
+};
