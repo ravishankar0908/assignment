@@ -5,10 +5,23 @@ import { messages } from "../utils/messagesUtils.js";
 // to get all jobs including server side search
 export const getAllJobs = async (req, res) => {
   try {
-    const { search, location, jobType } = req.query;
+    const { search, location, jobType, salaryRange } = req.query;
 
     const query = {};
     const condition = [];
+
+    if (salaryRange) {
+      const [minSalary, maxSalary] = salaryRange.split(",");
+
+      if (minSalary && maxSalary) {
+        condition.push({
+          $and: [
+            { "salaryRange.min": { $gte: minSalary } },
+            { "salaryRange.max": { $lte: maxSalary } },
+          ],
+        });
+      }
+    }
 
     if (search) {
       condition.push({ title: { $regex: search, $options: "i" } });

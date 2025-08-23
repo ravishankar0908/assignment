@@ -49,6 +49,7 @@ function App() {
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [job, setJob] = useState("");
+  const [salaryRange, setSalaryRange] = useState([]);
   const { TextArea } = Input;
   const showModal = () => {
     setIsModalOpen(true);
@@ -71,25 +72,27 @@ function App() {
   };
 
   const onChange = (value) => {
-    console.log("onChange: ", value);
+    setSalaryRange(value);
   };
   const onChangeComplete = (value) => {
-    console.log("onChangeComplete: ", value);
+    setSalaryRange(value);
   };
 
   const fetchData = async () => {
-    await getAllJobs(search, location, job)
+    await getAllJobs(search, location, job, salaryRange)
       .then((res) => {
         setJoblist(res.jobs);
       })
       .catch((error) => {
-        console.log(error);
+        if (error.status === 404) {
+          setJoblist([]);
+        }
       });
   };
 
   useEffect(() => {
     fetchData();
-  }, [search, location, job]);
+  }, [search, location, job, salaryRange]);
 
   const onSubmit = async (values) => {
     const data = {
@@ -104,14 +107,15 @@ function App() {
 
     await insertJobs(data)
       .then((res) => {
-        console.log(res.message);
         toast(res.message);
         reset();
         handleCancel();
         fetchData();
       })
       .catch((error) => {
-        console.log(error.message);
+        if (error.status === 404) {
+          toast(error.message);
+        }
       });
   };
 
@@ -143,7 +147,7 @@ function App() {
         </div>
       </nav>
 
-      <div className="shadow-lg shadow-gray-200 w-full h-25 gap-5 flex justify-center items-center px-20 mt-7 ">
+      <div className="shadow-lg sticky z-10 bg-white top-0 shadow-gray-200 w-full h-25 gap-5 flex justify-center items-center px-20 mt-7 ">
         <Input
           placeholder="Search by Job Title, Role"
           variant="borderless"
@@ -172,7 +176,7 @@ function App() {
         <Divider type="vertical" className="bg-gray-300 !h-[50%] " />
 
         <Select
-          defaultValue="Job Type"
+          placeholder="Job Type"
           variant="borderless"
           className="!w-full"
           style={{ width: 120 }}
@@ -205,66 +209,76 @@ function App() {
         </div>
       </div>
 
-      <div className="mt-10 px-3 md:px-20 grid md:grid-cols-4 gap-5">
-        {joblist.map((job) => (
-          <Card
-            key={job._id}
-            style={{ width: "100%" }}
-            className="shadow-lg min-h-80  "
-          >
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-3 ">
-                <div className="flex justify-between">
-                  <div className="w-20 h-20 shadow-lg bg-gradient-to-b from-[#fdfdfc] to-[#f2f2f2] rounded-2xl">
-                    {/* logo */}
-                    <img
-                      src={companyLogos[1]}
-                      className="rounded-full p-2"
-                      alt=""
-                      srcset=""
-                    />
+      <div
+        className={`${
+          joblist.length === 0
+            ? "mt-10 px-3"
+            : "mt-10 mb-10 px-3 md:grid-cols-2 md:px-10 lg:px-20 grid lg:grid-cols-4 gap-5"
+        } `}
+      >
+        {joblist.length === 0 ? (
+          <p className="text-red-600 text-center w-full">Data is not found</p>
+        ) : (
+          joblist.map((job) => (
+            <Card
+              key={job._id}
+              style={{ width: "100%" }}
+              className="shadow-lg min-h-80  "
+            >
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-3 ">
+                  <div className="flex justify-between">
+                    <div className="w-20 h-20 shadow-lg bg-gradient-to-b from-[#fdfdfc] to-[#f2f2f2] rounded-2xl">
+                      {/* logo */}
+                      <img
+                        src={companyLogos[1]}
+                        className="rounded-full p-2"
+                        alt=""
+                        srcset=""
+                      />
+                    </div>
+                    <div>
+                      <p className="bg-[#b0d9ff] py-2 px-3 text-semibold rounded-xl font-sans">
+                        24h Ago
+                      </p>
+                    </div>
                   </div>
                   <div>
-                    <p className="bg-[#b0d9ff] py-2 px-3 text-semibold rounded-xl font-sans">
-                      24h Ago
+                    <p className="text-xl font-bold">{job.title}</p>
+                  </div>
+                  <div className="flex justify-between ">
+                    <p className="flex items-center gap-2">
+                      <UserPlus size={(18, 18)} /> 1-3 yr Exp
+                    </p>
+
+                    <p className="flex items-center gap-2">
+                      <Building2 size={(18, 18)} /> Onsite
+                    </p>
+
+                    <p className="flex items-center gap-2">
+                      <Layers size={(15, 18)} /> 12LPA
                     </p>
                   </div>
+                  <div className="pl-4 mt-3">
+                    <ul className="list-disc">
+                      {job.description
+                        ?.split("\n")
+                        .filter((line) => line.trim() !== "")
+                        .map((line, idx) => (
+                          <li key={idx}>{line}</li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xl font-bold">{job.title}</p>
-                </div>
-                <div className="flex justify-between ">
-                  <p className="flex items-center gap-2">
-                    <UserPlus size={(18, 18)} /> 1-3 yr Exp
-                  </p>
-
-                  <p className="flex items-center gap-2">
-                    <Building2 size={(18, 18)} /> Onsite
-                  </p>
-
-                  <p className="flex items-center gap-2">
-                    <Layers size={(15, 18)} /> 12LPA
-                  </p>
-                </div>
-                <div className="pl-4 mt-3">
-                  <ul className="list-disc">
-                    {job.description
-                      ?.split("\n")
-                      .filter((line) => line.trim() !== "")
-                      .map((line, idx) => (
-                        <li key={idx}>{line}</li>
-                      ))}
-                  </ul>
+                <div className="">
+                  <button className="!bg-[#00aaff] px-15 py-3 rounded-lg flex items-center gap-2 text-lg text-white hover:cursor-pointer w-full justify-center">
+                    Apply Now
+                  </button>
                 </div>
               </div>
-              <div className="">
-                <button className="!bg-[#00aaff] px-15 py-3 rounded-lg flex items-center gap-2 text-lg text-white hover:cursor-pointer w-full justify-center">
-                  Apply Now
-                </button>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
 
       <Modal

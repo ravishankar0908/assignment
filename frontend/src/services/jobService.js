@@ -10,15 +10,17 @@ const instance = axios.create({
   },
 });
 
-export const getAllJobs = async (search, location, job) => {
+export const getAllJobs = async (search, location, job, salaryRange) => {
   try {
     const allJobs = await instance.get(
-      `${base_api}api/jobs?search=${search}&location=${location}&jobType=${job}`
+      `${base_api}api/jobs?search=${search}&location=${location}&jobType=${job}&salaryRange=${salaryRange}`
     );
     return allJobs.data;
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw {
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || "Something went wrong",
+    };
   }
 };
 
